@@ -1,0 +1,19 @@
+{
+  "name": "@hexlet/code",
+  "version": "1.0.0",
+  "description": "rss-aggregator",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nadezhda-97/frontend-project-11.git"
+  },
+  "author": "Nadezhda Nikitina",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Nadezhda-97/frontend-project-11/issues"
+  },
+  "homepage": "https://github.com/Nadezhda-97/frontend-project-11#readme"
+}
