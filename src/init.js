@@ -26,7 +26,8 @@ const init = () => {
     const formData = new FormData(e.target);
     const data = formData.get('url');
 
-    const schema = yup.string().required().url().notOneOf(watchedState.links);
+    const urls = watchedState.links.map((link) => link.url);
+    const schema = yup.string().required().url().notOneOf(urls);
     schema.validate(data)
       .then((url) => {
         watchedState.form.status = 'valid';
