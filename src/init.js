@@ -4,10 +4,10 @@ import watcher from './view.js';
 const init = () => {
   const initialState = {
     form: {
-      links: [],
       status: 'filling',
       error: null,
     },
+    feeds: [],
     posts: [],
   };
 
@@ -24,9 +24,8 @@ const init = () => {
     const formData = new FormData(e.target);
     const data = formData.get('url');
 
-    watchedState.form.links.push(data);
-
-    const schema = yup.string().required().url().notOneOf(watchedState.form.links);
+    const links = watchedState.feeds.map((feed) => feed.url);
+    const schema = yup.string().required().url().notOneOf(links);
     schema.validate(data)
       .then(() => {
         watchedState.form.status = 'valid';
