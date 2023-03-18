@@ -1,5 +1,6 @@
 import * as yup from 'yup';
-import watcher from './view.js';
+import onChange from 'on-change';
+import render from './view.js';
 
 const init = () => {
   const initialState = {
@@ -7,8 +8,9 @@ const init = () => {
       status: 'filling',
       error: null,
     },
-    feeds: [],
+    links: [],
     posts: [],
+    feeds: [],
   };
 
   const elements = {
@@ -17,22 +19,22 @@ const init = () => {
     feedback: document.querySelector('.feedback'),
   };
 
-  const watchedState = watcher(initialState, elements);
+  const watchedState = onChange(initialState, render(initialState, elements));
 
   elements.form.addEventListener('submit', (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const data = formData.get('url');
 
-    const links = watchedState.feeds.map((feed) => feed.url);
-    const schema = yup.string().required().url().notOneOf(links);
+    const schema = yup.string().required().url().notOneOf(watchedState.links);
     schema.validate(data)
-      .then(() => {
+      .then((url) => {
         watchedState.form.status = 'valid';
+        watchedState.links.push(url);
       })
       .catch((error) => {
         watchedState.form.status = 'invalid';
-        watchedState.form.error = error;
+        watchedState.form.error = error.message;
       });
   });
 };

@@ -1,13 +1,20 @@
-import onChange from 'on-change';
-
 const render = (initialState, elements) => {
   const { feedback } = elements;
+  feedback.textContent = '';
 
-  if (initialState.form.status === 'valid') {
-    feedback.textContent = 'RSS успешно загружен';
-  } else {
-    feedback.textContent = 'error';
+  switch (initialState.form.status) {
+    case 'valid': {
+      feedback.textContent = 'RSS успешно загружен';
+      break;
+    }
+    case 'invalid': {
+      feedback.textContent = 'error';
+      break;
+    }
+    default: {
+      throw new Error(`Unknown status: ${initialState.form.status}`);
+    }
   }
 };
 
-export default (initialState, elements) => onChange(initialState, render(initialState, elements));
+export default render;
