@@ -1,20 +1,29 @@
-const render = (initialState, elements) => {
-  const { feedback } = elements;
-  feedback.textContent = '';
+import onChange from 'on-change';
 
-  switch (initialState.form.status) {
-    case 'valid': {
-      feedback.textContent = 'RSS успешно загружен';
-      break;
-    }
-    case 'invalid': {
-      feedback.textContent = 'error';
-      break;
-    }
-    default: {
-      throw new Error(`Unknown status: ${initialState.form.status}`);
-    }
+const render = (value, elements) => {
+  const { feedback } = elements;
+
+  if (value === 'filling') {
+    feedback.textContent = '';
+  }
+  if (value === 'valid') {
+    feedback.textContent = 'RSS успешно загружен';
+  }
+  if (value === 'invalid') {
+    feedback.textContent = 'error';
   }
 };
 
-export default render;
+const watcher = (initialState, elements) => onChange(initialState, (path, value) => {
+  switch (path) {
+    case 'form.status':
+      render(value, elements);
+      break;
+    default:
+      throw new Error(`Unknown path: ${path}`);
+  }
+
+  return initialState;
+});
+
+export default watcher;

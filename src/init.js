@@ -1,6 +1,5 @@
 import * as yup from 'yup';
-import onChange from 'on-change';
-import render from './view.js';
+import watcher from './view.js';
 
 const init = () => {
   const initialState = {
@@ -19,15 +18,20 @@ const init = () => {
     feedback: document.querySelector('.feedback'),
   };
 
-  const watchedState = onChange(initialState, render(initialState, elements));
+  const watchedState = watcher(initialState, elements);
 
   elements.form.addEventListener('submit', (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const data = formData.get('url');
 
-    const urls = watchedState.links.map((link) => link.url);
-    const schema = yup.string().required().url().notOneOf(urls);
+    const schema = yup
+      .string()
+      .trim()
+      .required()
+      .url()
+      .notOneOf(watchedState.links);
+
     schema.validate(data)
       .then((url) => {
         watchedState.form.status = 'valid';
