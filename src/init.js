@@ -37,9 +37,8 @@ const init = () => {
         watchedState.form.status = 'valid';
         watchedState.links.push(url);
       })
-      .catch((error) => {
+      .catch(() => {
         watchedState.form.status = 'invalid';
-        watchedState.form.error = error.message;
       });
   });
 };

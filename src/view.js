@@ -17,6 +17,7 @@ const render = (value, elements) => {
 const watcher = (initialState, elements) => onChange(initialState, (path, value) => {
   switch (path) {
     case 'form.status':
+    case 'links':
       render(value, elements);
       break;
     default:
