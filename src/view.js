@@ -1,15 +1,19 @@
 import onChange from 'on-change';
 
 const render = (value, elements) => {
-  const { feedback } = elements;
+  const { form, input, feedback } = elements;
 
   if (value === 'filling') {
     feedback.textContent = '';
   }
   if (value === 'valid') {
+    input.classList.remove('is-invalid');
     feedback.textContent = 'RSS успешно загружен';
+    form.reset();
+    input.focus();
   }
   if (value === 'invalid') {
+    input.classList.add('is-invalid');
     feedback.textContent = 'error';
   }
 };
