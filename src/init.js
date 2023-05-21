@@ -1,7 +1,29 @@
 import * as yup from 'yup';
+import i18next from 'i18next';
 import watcher from './view.js';
+import ru from './locales/ru.js';
 
-const init = () => {
+const init = async () => {
+  const i18nextInstance = i18next.createInstance();
+
+  await i18nextInstance.init({
+    lng: 'ru',
+    debug: true,
+    resources: {
+      ru,
+    },
+  });
+
+  yup.setLocale({
+    mixed: {
+      notOneOf: 'alreadyExists',
+    },
+    string: {
+      required: 'empty',
+      url: 'invalidUrl',
+    },
+  });
+
   const initialState = {
     form: {
       status: 'filling',
@@ -18,7 +40,7 @@ const init = () => {
     feedback: document.querySelector('.feedback'),
   };
 
-  const watchedState = watcher(initialState, elements);
+  const watchedState = watcher(initialState, elements, i18nextInstance);
 
   elements.form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -37,8 +59,15 @@ const init = () => {
         watchedState.form.status = 'valid';
         watchedState.links.push(url);
       })
-      .catch(() => {
-        watchedState.form.status = 'invalid';
+      .catch((err) => {
+        switch (err.name) {
+          case 'ValidationError':
+            watchedState.form.errors = err.message;
+            watchedState.form.status = 'invalid';
+            break;
+          default:
+            throw new Error(`Unknown err: ${err.name}!`);
+        }
       });
   });
 };

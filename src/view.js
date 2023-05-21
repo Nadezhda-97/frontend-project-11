@@ -1,28 +1,41 @@
 import onChange from 'on-change';
 
-const render = (value, elements) => {
+const render = (watchedState, elements, i18nextInstance) => {
   const { form, input, feedback } = elements;
 
-  if (value === 'filling') {
+  if (watchedState.form.status === 'filling') {
     feedback.textContent = '';
   }
-  if (value === 'valid') {
+  if (watchedState.form.status === 'valid') {
     input.classList.remove('is-invalid');
-    feedback.textContent = 'RSS успешно загружен';
+    feedback.textContent = i18nextInstance.t('success');
     form.reset();
     input.focus();
   }
-  if (value === 'invalid') {
+  if (watchedState.form.status === 'invalid') {
     input.classList.add('is-invalid');
-    feedback.textContent = 'error';
+    switch (watchedState.form.errors) {
+      case 'empty':
+        feedback.textContent = i18nextInstance.t('error.empty');
+        break;
+      case 'invalidUrl':
+        feedback.textContent = i18nextInstance.t('error.invalidUrl');
+        break;
+      case 'alreadyExists':
+        feedback.textContent = i18nextInstance.t('error.alreadyExists');
+        break;
+      default:
+        throw new Error(`Unknown validationError: ${watchedState.form.errors}`);
+    }
   }
 };
 
-const watcher = (initialState, elements) => onChange(initialState, (path, value) => {
+const watcher = (initialState, elements, i18nextInstance) => onChange(initialState, (path) => {
   switch (path) {
     case 'form.status':
+    case 'form.errors':
     case 'links':
-      render(value, elements);
+      render(initialState, elements, i18nextInstance);
       break;
     default:
       throw new Error(`Unknown path: ${path}`);
