@@ -2,6 +2,7 @@ import * as yup from 'yup';
 import i18next from 'i18next';
 import watcher from './view.js';
 import ru from './locales/ru.js';
+import { handleError, getData } from './utils.js';
 
 const init = async () => {
   const i18nextInstance = i18next.createInstance();
@@ -29,6 +30,12 @@ const init = async () => {
       status: 'filling',
       error: null,
     },
+
+    loadingData: {
+      status: 'waiting',
+      error: null,
+    },
+
     links: [],
     posts: [],
     feeds: [],
@@ -38,6 +45,9 @@ const init = async () => {
     form: document.querySelector('.rss-form'),
     input: document.getElementById('url-input'),
     feedback: document.querySelector('.feedback'),
+
+    posts: document.querySelector('.posts'),
+    feeds: document.querySelector('.feeds'),
   };
 
   const watchedState = watcher(initialState, elements, i18nextInstance);
@@ -58,16 +68,10 @@ const init = async () => {
       .then((url) => {
         watchedState.form.status = 'valid';
         watchedState.links.push(url);
+        return getData(url, watchedState);
       })
       .catch((err) => {
-        switch (err.name) {
-          case 'ValidationError':
-            watchedState.form.errors = err.message;
-            watchedState.form.status = 'invalid';
-            break;
-          default:
-            throw new Error(`Unknown err: ${err.name}!`);
-        }
+        handleError(watchedState, err);
       });
   });
 };
