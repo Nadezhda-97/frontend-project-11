@@ -52,6 +52,7 @@ const getData = (url, watchedState) => {
     .then((response) => {
       const parsedRss = parse(response.data.contents);
       const { feed, posts } = parsedRss;
+      feed.link = url;
       feed.id = _.uniqueId();
       watchedState.feeds.push(feed);
 
@@ -70,4 +71,38 @@ const getData = (url, watchedState) => {
   return data;
 };
 
-export { handleError, getData };
+const checkUpdate = (watchedState, time) => {
+  const promises = watchedState.feeds.map((feed) => {
+    const { link } = feed;
+    const promise = axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(link)}`)
+      .then((response) => {
+        const data = parse(response.data.contents);
+        const { posts } = data;
+
+        const postsLinks = watchedState.posts.map((post) => post.link);
+        const newPosts = posts.filter((newPost) => !postsLinks.includes(newPost.link));
+
+        if (newPosts.length !== 0) {
+          newPosts.forEach((newPost) => {
+            newPost.id = _.uniqueId();
+            newPost.feedId = feed.id;
+          });
+        } else {
+          return;
+        }
+
+        watchedState.posts.push(...newPosts);
+      })
+      .catch((error) => {
+        throw new Error(`Error of check update: ${error}`);
+      });
+
+    return promise;
+  });
+
+  Promise
+    .all(promises)
+    .finally(() => setTimeout(() => checkUpdate(watchedState, time), time));
+};
+
+export { handleError, getData, checkUpdate };

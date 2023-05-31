@@ -2,11 +2,12 @@ import * as yup from 'yup';
 import i18next from 'i18next';
 import watcher from './view.js';
 import ru from './locales/ru.js';
-import { handleError, getData } from './utils.js';
+import { handleError, getData, checkUpdate } from './utils.js';
 
 const init = async () => {
-  const i18nextInstance = i18next.createInstance();
+  const time = 5000;
 
+  const i18nextInstance = i18next.createInstance();
   await i18nextInstance.init({
     lng: 'ru',
     debug: true,
@@ -45,7 +46,6 @@ const init = async () => {
     form: document.querySelector('.rss-form'),
     input: document.getElementById('url-input'),
     feedback: document.querySelector('.feedback'),
-
     posts: document.querySelector('.posts'),
     feeds: document.querySelector('.feeds'),
   };
@@ -74,6 +74,8 @@ const init = async () => {
         handleError(watchedState, err);
       });
   });
+
+  checkUpdate(watchedState, time);
 };
 
 export default init;
