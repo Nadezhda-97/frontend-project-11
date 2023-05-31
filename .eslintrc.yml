@@ -9,5 +9,6 @@ parserOptions:
   sourceType: module
 rules: {
   no-console: off,
-  import/extensions: [ "error", "ignorePackages", { "js": "always" } ]
+  import/extensions: [ "error", "ignorePackages", { "js": "always" } ],
+  no-param-reassign: 0
 }
