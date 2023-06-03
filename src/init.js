@@ -40,6 +40,11 @@ const init = async () => {
     links: [],
     posts: [],
     feeds: [],
+
+    uiState: {
+      postId: null,
+      visitedPostsId: [],
+    },
   };
 
   const elements = {
@@ -73,6 +78,11 @@ const init = async () => {
       .catch((err) => {
         handleError(watchedState, err);
       });
+  });
+
+  elements.posts.addEventListener('click', (e) => {
+    watchedState.uiState.postId = e.target.dataset.id;
+    watchedState.uiState.visitedPostsId.push(e.target.dataset.id);
   });
 
   checkUpdate(watchedState, time);

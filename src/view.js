@@ -91,7 +91,23 @@ const renderPosts = (watchedState, elements, i18nextInstance) => {
     a.setAttribute('rel', 'noopener noreferrer');
     a.textContent = item.title;
 
+    if (watchedState.uiState.visitedPostsId.includes(item.id)) {
+      a.classList.add('fw-normal');
+    } else {
+      a.classList.add('fw-bold');
+    }
+
+    const button = document.createElement('button');
+    button.setAttribute('type', 'button');
+    button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+    button.setAttribute('data-id', item.id);
+    button.setAttribute('target', '_blank');
+    button.setAttribute('data-bs-toggle', 'modal');
+    button.setAttribute('data-bs-target', '#modal');
+    button.textContent = i18nextInstance.t('button');
+
     li.append(a);
+    li.append(button);
     ul.prepend(li);
   });
 };
@@ -136,6 +152,19 @@ const renderFeeds = (watchedState, elements, i18nextInstance) => {
   });
 };
 
+const renderModalWindow = (watchedState) => {
+  const currentPost = watchedState.posts.find((post) => post.id === watchedState.uiState.postId);
+
+  const modalTitle = document.querySelector('.modal-title');
+  modalTitle.textContent = currentPost.title;
+
+  const modalBody = document.querySelector('.modal-body');
+  modalBody.textContent = currentPost.description;
+
+  const fullArticle = document.querySelector('.full-article');
+  fullArticle.setAttribute('href', currentPost.link);
+};
+
 const watcher = (initialState, elements, i18nextInstance) => onChange(initialState, (path) => {
   switch (path) {
     case 'form.status':
@@ -148,9 +177,14 @@ const watcher = (initialState, elements, i18nextInstance) => onChange(initialSta
       renderLoadingData(initialState, elements, i18nextInstance);
       break;
     case 'feeds':
-    case 'posts':
       renderFeeds(initialState, elements, i18nextInstance);
+      break;
+    case 'posts':
+    case 'uiState.visitedPostsId':
       renderPosts(initialState, elements, i18nextInstance);
+      break;
+    case 'uiState.postId':
+      renderModalWindow(initialState);
       break;
     default:
       throw new Error(`Unknown path: ${path}`);
