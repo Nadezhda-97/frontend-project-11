@@ -1,4 +1,4 @@
-name: Github Actions
+name: Linter Check
 on: push
 jobs:
   build:
