@@ -1,5 +1,6 @@
 import axios from 'axios';
 import _ from 'lodash';
+import parse from './parse.js';
 
 const handleError = (watchedState, error) => {
   switch (error.name) {
@@ -20,31 +21,6 @@ const handleError = (watchedState, error) => {
     default:
       throw new Error(`Unknown errorName: ${error}!`);
   }
-};
-
-const parse = (data) => {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(data, 'text/xml');
-  if (doc.querySelector('parsererror')) {
-    throw new Error('ParserError');
-  }
-
-  const feed = {
-    title: doc.querySelector('title').textContent,
-    description: doc.querySelector('description').textContent,
-  };
-
-  const posts = [];
-  const items = doc.querySelectorAll('item');
-  items.forEach((item) => {
-    const title = item.querySelector('title').textContent;
-    const link = item.querySelector('link').textContent;
-    const description = item.querySelector('description').textContent;
-
-    posts.push({ title, link, description });
-  });
-
-  return { feed, posts };
 };
 
 const getData = (url, watchedState) => {

@@ -91,7 +91,7 @@ const renderPosts = (watchedState, elements, i18nextInstance) => {
     a.setAttribute('rel', 'noopener noreferrer');
     a.textContent = item.title;
 
-    if (watchedState.uiState.visitedPostsId.includes(item.id)) {
+    if (watchedState.uiState.visitedPostsId.has(item.id)) {
       a.classList.add('fw-normal');
     } else {
       a.classList.add('fw-bold');
@@ -169,7 +169,6 @@ const watcher = (initialState, elements, i18nextInstance) => onChange(initialSta
   switch (path) {
     case 'form.status':
     case 'form.error':
-    case 'links':
       renderForm(initialState, elements, i18nextInstance);
       break;
     case 'loadingData.status':
