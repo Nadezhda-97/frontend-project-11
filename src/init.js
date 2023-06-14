@@ -17,12 +17,10 @@ const validate = (value, feedLinks, watchedState) => {
 
   schema.validate(value)
     .then((url) => {
-      console.log('ok');
       watchedState.form.status = 'valid';
       return getData(url, watchedState);
     })
     .catch((err) => {
-      console.log('error ->', err);
       handleError(watchedState, err);
     });
 };
