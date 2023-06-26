@@ -3,10 +3,6 @@ import onChange from 'on-change';
 const renderForm = (watchedState, elements, i18nextInstance) => {
   const { input, feedback } = elements;
 
-  if (watchedState.form.status === 'filling') {
-    feedback.textContent = '';
-  }
-
   if (watchedState.form.status === 'invalid') {
     input.classList.add('is-invalid');
     feedback.classList.remove('text-success');
@@ -25,6 +21,11 @@ const renderForm = (watchedState, elements, i18nextInstance) => {
       default:
         throw new Error(`Unknown validationError: ${watchedState.form.error}`);
     }
+  }
+
+  if (watchedState.form.status === 'valid') {
+    input.classList.remove('is-invalid');
+    feedback.textContent = '';
   }
 };
 
