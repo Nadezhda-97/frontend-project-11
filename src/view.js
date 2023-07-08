@@ -3,6 +3,11 @@ import onChange from 'on-change';
 const renderForm = (watchedState, elements, i18nextInstance) => {
   const { input, feedback } = elements;
 
+  if (watchedState.form.status === 'valid') {
+    input.classList.remove('is-invalid');
+    feedback.textContent = '';
+  }
+
   if (watchedState.form.status === 'invalid') {
     input.classList.add('is-invalid');
     feedback.classList.remove('text-success');
@@ -22,15 +27,16 @@ const renderForm = (watchedState, elements, i18nextInstance) => {
         throw new Error(`Unknown validationError: ${watchedState.form.error}`);
     }
   }
-
-  if (watchedState.form.status === 'valid') {
-    input.classList.remove('is-invalid');
-    feedback.textContent = '';
-  }
 };
 
 const renderLoadingData = (watchedState, elements, i18nextInstance) => {
   const { form, input, feedback } = elements;
+
+  if (watchedState.loadingData.status === 'loading') {
+    feedback.classList.remove('text-danger');
+    feedback.classList.remove('text-success');
+    feedback.textContent = i18nextInstance.t('loading');
+  }
 
   if (watchedState.loadingData.status === 'success') {
     input.classList.remove('is-invalid');
@@ -52,6 +58,9 @@ const renderLoadingData = (watchedState, elements, i18nextInstance) => {
         break;
       case 'parserError':
         feedback.textContent = i18nextInstance.t('error.invalidRSS');
+        break;
+      case 'unknownError':
+        feedback.textContent = i18nextInstance.t('error.unknownError');
         break;
       default:
         throw new Error(`Unknown dataLoading error: ${watchedState.loadingData.error}`);

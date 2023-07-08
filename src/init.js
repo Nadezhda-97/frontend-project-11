@@ -12,32 +12,44 @@ const timeUpdate = 5000;
 const timeWaiting = 10000;
 
 const createProxy = (url) => {
-  const newUrl = new URL(url);
-  return `https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(newUrl)}`;
+  const proxy = new URL('/get', 'https://allorigins.hexlet.app');
+  proxy.searchParams.set('disableCache', 'true');
+  proxy.searchParams.set('url', url);
+  return proxy.toString();
 };
 
-const handleError = (watchedState, error) => {
+const handleError = (error) => {
   switch (error.name) {
+    case 'ValidationError':
+      return error.message;
     case 'AxiosError':
-      watchedState.loadingData.error = 'axiosError';
-      watchedState.loadingData.status = 'failed';
-      watchedState.form.status = '';
-      watchedState.form.error = null;
-      break;
-    case 'Error':
-      if (error.message === 'ParserError') {
-        watchedState.loadingData.error = 'parserError';
-        watchedState.loadingData.status = 'failed';
-        watchedState.form.status = '';
-        watchedState.form.error = null;
-      }
-      break;
+      return 'axiosError';
     default:
-      throw new Error(`Unknown errorName: ${error}!`);
+      if (error.message === 'ParserError') {
+        return 'parserError';
+      }
+
+      return 'unknownError';
   }
 };
 
-const getData = (url, watchedState) => {
+const validation = (url, feedUrls) => {
+  const schema = yup
+    .string()
+    .trim()
+    .required()
+    .url()
+    .notOneOf(feedUrls);
+
+  return schema.validate(url)
+    .then(() => null)
+    .catch((error) => error);
+};
+
+const loadData = (url, watchedState) => {
+  watchedState.loadingData.status = 'loading';
+  watchedState.loadingData.error = null;
+
   const data = axios({
     method: 'get',
     url: createProxy(url),
@@ -46,24 +58,23 @@ const getData = (url, watchedState) => {
     .then((response) => {
       const parsedRss = parse(response.data.contents);
       const { feed, posts } = parsedRss;
-      feed.link = url;
+      feed.url = url;
       feed.id = _.uniqueId();
-      watchedState.feeds.push(feed);
 
       posts.forEach((post) => {
         post.id = _.uniqueId();
         post.feedId = feed.id;
       });
 
-      watchedState.posts.push(...posts);
-      watchedState.loadingData.error = null;
       watchedState.loadingData.status = 'success';
+      watchedState.loadingData.error = null;
 
-      watchedState.form.status = '';
-      watchedState.form.error = null;
+      watchedState.feeds.push(feed);
+      watchedState.posts.push(...posts);
     })
-    .catch((err) => {
-      handleError(watchedState, err);
+    .catch((error) => {
+      watchedState.loadingData.error = handleError(error);
+      watchedState.loadingData.status = 'failed';
     });
 
   return data;
@@ -71,8 +82,8 @@ const getData = (url, watchedState) => {
 
 const checkUpdate = (watchedState, time) => {
   const promises = watchedState.feeds.map((feed) => {
-    const { link } = feed;
-    const promise = axios.get(createProxy(link))
+    const { url } = feed;
+    const promise = axios.get(createProxy(url))
       .then((response) => {
         const data = parse(response.data.contents);
         const { posts } = data;
@@ -101,19 +112,6 @@ const checkUpdate = (watchedState, time) => {
   Promise
     .all(promises)
     .finally(() => setTimeout(() => checkUpdate(watchedState, time), time));
-};
-
-const validation = (url, feedLinks) => {
-  const schema = yup
-    .string()
-    .trim()
-    .required()
-    .url()
-    .notOneOf(feedLinks);
-
-  return schema.validate(url)
-    .then(() => null)
-    .catch((err) => err);
 };
 
 const init = () => {
@@ -161,26 +159,19 @@ const init = () => {
         const formData = new FormData(e.target);
         const url = formData.get('url');
 
-        const feedLinks = watchedState.feeds.map((feed) => feed.link);
+        const feedUrls = watchedState.feeds.map((feed) => feed.url);
 
-        validation(url, feedLinks)
+        validation(url, feedUrls)
           .then((error) => {
-            if (error !== null) {
-              watchedState.form.error = error.message;
+            if (error) {
+              watchedState.form.error = handleError(error);
               watchedState.form.status = 'invalid';
-
-              watchedState.loadingData.status = '';
-              watchedState.loadingData.error = null;
               return;
             }
 
             watchedState.form.status = 'valid';
             watchedState.form.error = null;
-
-            watchedState.loadingData.status = '';
-            watchedState.loadingData.error = null;
-
-            getData(url, watchedState);
+            loadData(url, watchedState);
           });
       });
 
