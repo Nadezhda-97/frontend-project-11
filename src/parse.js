@@ -2,7 +2,9 @@ const parse = (data) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(data, 'text/xml');
   if (doc.querySelector('parsererror')) {
-    throw new Error('ParserError');
+    const error = new Error('failed parsing data');
+    error.name = 'ParserError';
+    throw error;
   }
 
   const feed = {

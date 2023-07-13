@@ -20,26 +20,22 @@ const createProxy = (url) => {
 
 const handleError = (error) => {
   switch (error.name) {
-    case 'ValidationError':
-      return error.message;
     case 'AxiosError':
       return 'axiosError';
+    case 'ParserError':
+      return 'parserError';
     default:
-      if (error.message === 'ParserError') {
-        return 'parserError';
-      }
-
       return 'unknownError';
   }
 };
 
-const validation = (url, feedUrls) => {
+const validation = (url, urls) => {
   const schema = yup
     .string()
     .trim()
     .required()
     .url()
-    .notOneOf(feedUrls);
+    .notOneOf(urls);
 
   return schema.validate(url)
     .then(() => null)
@@ -82,36 +78,32 @@ const loadData = (url, watchedState) => {
 
 const checkUpdate = (watchedState, time) => {
   const promises = watchedState.feeds.map((feed) => {
-    const { url } = feed;
+    const { url, id } = feed;
     const promise = axios.get(createProxy(url))
       .then((response) => {
         const data = parse(response.data.contents);
         const { posts } = data;
 
         const postsLinks = watchedState.posts.map((post) => post.link);
-        const newPosts = posts.filter((newPost) => !postsLinks.includes(newPost.link));
+        const newPosts = posts.filter((post) => !postsLinks.includes(post.link));
 
-        if (newPosts.length !== 0) {
-          newPosts.forEach((newPost) => {
-            newPost.id = _.uniqueId();
-            newPost.feedId = feed.id;
-          });
-        } else {
-          return;
-        }
+        newPosts.forEach((newPost) => {
+          newPost.id = _.uniqueId();
+          newPost.feedId = id;
+        });
 
         watchedState.posts.push(...newPosts);
       })
       .catch((error) => {
-        throw new Error(`Error of check update: ${error}`);
+        console.log(error);
       });
 
     return promise;
   });
 
-  Promise
+  return Promise
     .all(promises)
-    .finally(() => setTimeout(() => checkUpdate(watchedState, time), time));
+    .then(() => setTimeout(() => checkUpdate(watchedState, time), time));
 };
 
 const init = () => {
@@ -159,12 +151,12 @@ const init = () => {
         const formData = new FormData(e.target);
         const url = formData.get('url');
 
-        const feedUrls = watchedState.feeds.map((feed) => feed.url);
+        const urls = watchedState.feeds.map((feed) => feed.url);
 
-        validation(url, feedUrls)
+        validation(url, urls)
           .then((error) => {
             if (error) {
-              watchedState.form.error = handleError(error);
+              watchedState.form.error = error.message;
               watchedState.form.status = 'invalid';
               return;
             }
@@ -180,7 +172,7 @@ const init = () => {
         watchedState.uiState.visitedPostsId.add(e.target.dataset.id);
       });
 
-      checkUpdate(watchedState, timeUpdate);
+      setTimeout(() => checkUpdate(watchedState, timeUpdate), timeUpdate);
     });
 };
 

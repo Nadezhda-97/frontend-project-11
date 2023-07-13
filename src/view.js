@@ -33,6 +33,7 @@ const renderLoadingData = (watchedState, elements, i18nextInstance) => {
   const { form, input, feedback } = elements;
 
   if (watchedState.loadingData.status === 'loading') {
+    input.classList.remove('is-invalid');
     feedback.classList.remove('text-danger');
     feedback.classList.remove('text-success');
     feedback.textContent = i18nextInstance.t('loading');
