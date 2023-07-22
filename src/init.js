@@ -21,9 +21,9 @@ const createProxy = (url) => {
 const handleError = (error) => {
   switch (error.name) {
     case 'AxiosError':
-      return 'axiosError';
+      return 'networkError';
     case 'ParserError':
-      return 'parserError';
+      return 'invalidRSS';
     default:
       return 'unknownError';
   }
@@ -43,17 +43,15 @@ const validation = (url, urls) => {
 };
 
 const loadData = (url, watchedState) => {
-  watchedState.loadingData.status = 'loading';
-  watchedState.loadingData.error = null;
+  watchedState.loadingData = { status: 'loading', error: null };
 
-  const data = axios({
+  return axios({
     method: 'get',
     url: createProxy(url),
     timeout: timeWaiting,
   })
     .then((response) => {
-      const parsedRss = parse(response.data.contents);
-      const { feed, posts } = parsedRss;
+      const { feed, posts } = parse(response.data.contents);
       feed.url = url;
       feed.id = _.uniqueId();
 
@@ -62,27 +60,21 @@ const loadData = (url, watchedState) => {
         post.feedId = feed.id;
       });
 
-      watchedState.loadingData.status = 'success';
-      watchedState.loadingData.error = null;
-
+      watchedState.loadingData = { status: 'success', error: null };
       watchedState.feeds.push(feed);
       watchedState.posts.push(...posts);
     })
     .catch((error) => {
-      watchedState.loadingData.error = handleError(error);
-      watchedState.loadingData.status = 'failed';
+      watchedState.loadingData = { status: 'failed', error: handleError(error) };
     });
-
-  return data;
 };
 
 const checkUpdate = (watchedState, time) => {
   const promises = watchedState.feeds.map((feed) => {
     const { url, id } = feed;
-    const promise = axios.get(createProxy(url))
+    return axios.get(createProxy(url))
       .then((response) => {
-        const data = parse(response.data.contents);
-        const { posts } = data;
+        const { posts } = parse(response.data.contents);
 
         const postsLinks = watchedState.posts.map((post) => post.link);
         const newPosts = posts.filter((post) => !postsLinks.includes(post.link));
@@ -97,8 +89,6 @@ const checkUpdate = (watchedState, time) => {
       .catch((error) => {
         console.log(error);
       });
-
-    return promise;
   });
 
   return Promise
@@ -107,8 +97,8 @@ const checkUpdate = (watchedState, time) => {
 };
 
 const init = () => {
-  const i18nextInstance = i18next.createInstance();
-  i18nextInstance.init({
+  const i18nInstance = i18next.createInstance();
+  i18nInstance.init({
     lng: 'ru',
     debug: true,
     resources,
@@ -118,12 +108,12 @@ const init = () => {
 
       const initialState = {
         form: {
-          status: '',
+          isValid: null,
           error: null,
         },
 
         loadingData: {
-          status: '',
+          status: 'filling',
           error: null,
         },
 
@@ -139,12 +129,13 @@ const init = () => {
       const elements = {
         form: document.querySelector('.rss-form'),
         input: document.getElementById('url-input'),
+        submit: document.querySelector('[type="submit"]'),
         feedback: document.querySelector('.feedback'),
         posts: document.querySelector('.posts'),
         feeds: document.querySelector('.feeds'),
       };
 
-      const watchedState = watcher(initialState, elements, i18nextInstance);
+      const watchedState = watcher(initialState, elements, i18nInstance);
 
       elements.form.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -156,20 +147,23 @@ const init = () => {
         validation(url, urls)
           .then((error) => {
             if (error) {
-              watchedState.form.error = error.message;
-              watchedState.form.status = 'invalid';
+              watchedState.form = { isValid: false, error: error.message };
               return;
             }
 
-            watchedState.form.status = 'valid';
-            watchedState.form.error = null;
+            watchedState.form = { isValid: true, error: null };
             loadData(url, watchedState);
           });
       });
 
       elements.posts.addEventListener('click', (e) => {
-        watchedState.uiState.postId = e.target.dataset.id;
-        watchedState.uiState.visitedPostsId.add(e.target.dataset.id);
+        const { id } = e.target.dataset;
+        if (!id) {
+          return;
+        }
+
+        watchedState.uiState.postId = id;
+        watchedState.uiState.visitedPostsId.add(id);
       });
 
       setTimeout(() => checkUpdate(watchedState, timeUpdate), timeUpdate);
