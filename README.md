@@ -7,7 +7,7 @@
 
 RSS is a special format that is designed to describe news feeds, article announcements and other materials. With it, the website can transmit information about updates to the user.
 
-RSS Reader is a service that checks the RSS feeds of websites for new posts and displays them in a convenient way. It allows you to add an unlimited number of RSS feeds, updates them and adds new posts to the general feed.
+RSS Reader is a service that checks the RSS feeds of websites for new posts and shows these posts to the user. It allows you to add an unlimited number of RSS feeds, updates them and adds new posts to previous ones.
 
 ### Install
 ```
